@@ -4,6 +4,7 @@ import (
 	"net"
 	"io"
 	"fmt"
+	"strconv"
 )
 
 /*连接状态*/
@@ -39,12 +40,12 @@ func NewServer(addr string, port int) *server {
 }
 
 func (s *server) Run() error {
-	ls, err := net.Listen("tcp", "localhost:8888")
+	ls, err := net.Listen("tcp", net.JoinHostPort(s.addr, strconv.Itoa(s.port)))
 	if err != nil {
 		panic("listen 错误")
 		return err
 	}
-	fmt.Println("建立一个服务器，监听端口 8888...")
+	fmt.Printf("建立一个服务器，监听端口 %d...\n", s.port)
 	s.listener = ls
 	for {
 		conn, err := ls.Accept()
