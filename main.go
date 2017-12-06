@@ -29,12 +29,13 @@ func main() {
 	app.Run(os.Args)
 }
 
-func onConnect() {
+func onConnect(event socket.ConnEvent) {
 	fmt.Println("我收到了一个连接")
 }
 
-func onData() {
-	fmt.Println("我收到了一条数据")
+func onData(event socket.ConnEvent) {
+	fmt.Printf("%+v", event.Data)
+	//fmt.Println("我收到了一条数据")
 }
 
 func runClient(context *cli.Context) error {

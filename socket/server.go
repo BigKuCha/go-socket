@@ -26,9 +26,9 @@ type server struct {
 	port         int
 	listener     net.Listener
 	eventQueue   chan ConnEvent
-	OnConnect    func()
-	OnData       func()
-	OnDisconnect func()
+	OnConnect    func(event ConnEvent)
+	OnData       func(event ConnEvent)
+	OnDisconnect func(event ConnEvent)
 }
 
 func NewServer(addr string, port int) *server {
@@ -73,14 +73,11 @@ func (s *server) handleEvent() {
 			}
 			switch evt.Type {
 			case EVT_ON_CONNECT:
-				fmt.Println("获得一个连接")
-				s.OnConnect()
+				s.OnConnect(evt)
 			case EVT_ON_DATA:
-				fmt.Println("收到一个消息")
-				s.OnData()
+				s.OnData(evt)
 			case EVT_ON_DISCONNECT:
-				fmt.Println("断开链接")
-				s.OnDisconnect()
+				s.OnDisconnect(evt)
 			}
 		}
 	}
