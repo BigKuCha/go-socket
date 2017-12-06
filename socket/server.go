@@ -1,9 +1,9 @@
 package socket
 
 import (
-	"net"
-	"io"
 	"fmt"
+	"io"
+	"net"
 	"strconv"
 )
 
@@ -73,11 +73,17 @@ func (s *server) handleEvent() {
 			}
 			switch evt.Type {
 			case EVT_ON_CONNECT:
-				s.OnConnect(evt)
+				if s.OnConnect != nil {
+					s.OnConnect(evt)
+				}
 			case EVT_ON_DATA:
-				s.OnData(evt)
+				if s.OnData != nil {
+					s.OnData(evt)
+				}
 			case EVT_ON_DISCONNECT:
-				s.OnDisconnect(evt)
+				if s.OnDisconnect != nil {
+					s.OnDisconnect(evt)
+				}
 			}
 		}
 	}
@@ -89,13 +95,12 @@ func handleConn(s *server, conn net.Conn) {
 		_, err := conn.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				fmt.Println("read error:", err)
+				eventQueue := ConnEvent{
+					Type: EVT_ON_DISCONNECT,
+				}
+				s.eventQueue <- eventQueue
+				break
 			}
-			eventQueue := ConnEvent{
-				Type: EVT_ON_DISCONNECT,
-			}
-			s.eventQueue <- eventQueue
-			break
 		}
 		eventQueue := ConnEvent{
 			Type: EVT_ON_DATA,

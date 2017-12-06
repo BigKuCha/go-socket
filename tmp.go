@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net"
 	"fmt"
 	"github.com/urfave/cli"
 	"io"
+	"net"
 )
 
 func runServer(context *cli.Context) error {
