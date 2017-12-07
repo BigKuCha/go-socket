@@ -46,7 +46,7 @@ func (s *server) Run() error {
 		panic("listen 错误")
 		return err
 	}
-	fmt.Printf("建立一个服务器，监听端口 %d...\n", s.port)
+	fmt.Printf("建立一个服务器，地址: %s \n", ls.Addr().String())
 	s.listener = ls
 	for {
 		conn, err := ls.Accept()

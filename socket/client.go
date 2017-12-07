@@ -7,6 +7,23 @@ import (
 	"fmt"
 )
 
+//conn                net.Conn
+//status              int32
+//connId              int
+//sendMsgQueue        chan *sendTask
+//sendTimeoutSec      int
+//eventQueue          IEventQueue
+//streamProtocol      IStreamProtocol
+//maxReadBufferLength int
+//userdata            interface{}
+//from                int
+//readTimeoutSec      int
+//fnSyncExecute       FuncSyncExecute
+//unpacker            IUnpacker
+//disableSend         int32
+//localAddr           string
+//remoteAddr          string
+
 type client struct {
 	Conn         net.Conn
 	eventQueue   chan ConnEvent
