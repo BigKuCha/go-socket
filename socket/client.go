@@ -4,6 +4,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"fmt"
 )
 
 type client struct {
@@ -66,12 +67,13 @@ func (c *client) handleClientConn() {
 		_, err := c.Conn.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				eventQueue := ConnEvent{
-					Type: EVT_ON_DISCONNECT,
-				}
-				c.eventQueue <- eventQueue
-				break
+				fmt.Printf("%+v", err)
 			}
+			eventQueue := ConnEvent{
+				Type: EVT_ON_DISCONNECT,
+			}
+			c.eventQueue <- eventQueue
+			break
 		}
 		eventQueue := ConnEvent{
 			Type: EVT_ON_DATA,

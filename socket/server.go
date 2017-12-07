@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"os"
 )
 
 /*连接状态*/
@@ -95,12 +96,15 @@ func handleConn(s *server, conn net.Conn) {
 		_, err := conn.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				eventQueue := ConnEvent{
-					Type: EVT_ON_DISCONNECT,
-				}
-				s.eventQueue <- eventQueue
-				break
+				fmt.Printf("%+v", err)
+				os.Exit(0)
 			}
+			fmt.Println(conn.RemoteAddr(), "断开连接")
+			eventQueue := ConnEvent{
+				Type: EVT_ON_DISCONNECT,
+			}
+			s.eventQueue <- eventQueue
+			break
 		}
 		eventQueue := ConnEvent{
 			Type: EVT_ON_DATA,

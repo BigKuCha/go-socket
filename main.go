@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/urfave/cli"
 	"go-socket/socket"
-	"net"
 	"os"
 )
 
@@ -27,10 +26,11 @@ func main() {
 				client := socket.NewClient()
 				client.OnConnect = onClientConnect
 				client.OnData = onClientData
-				client.OnDisconnect = onClientData
+				client.OnDisconnect = onClientDisconnect
 				err := client.Connect("localhost", 8888)
 				if err != nil {
 					fmt.Println("客户端连接失败", err)
+					os.Exit(0)
 				}
 				r := bufio.NewReader(os.Stdin)
 				for {
@@ -59,29 +59,9 @@ func onClientConnect(event socket.ConnEvent) {
 
 func onClientDisconnect(event socket.ConnEvent) {
 	fmt.Println("客户端已经断开链接")
+	os.Exit(0)
 }
 
 func onClientData(event socket.ConnEvent) {
 	fmt.Println("客户端收到一条消息")
-}
-
-func runClient(context *cli.Context) error {
-	conn, err := net.Dial("tcp", "localhost:8888")
-	if err != nil {
-		panic(err)
-		// handle error
-	}
-	go func() {
-		status, _ := bufio.NewReader(conn).ReadString('\n')
-		fmt.Println(status)
-	}()
-	fmt.Println("----")
-	r := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("enter msg>")
-		b, _, _ := r.ReadLine()
-		conn.Write(b)
-	}
-	select {}
-	return nil
 }
