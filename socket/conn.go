@@ -2,6 +2,11 @@ package socket
 
 import "net"
 
+const (
+	MSG_TYPE_ACK = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
+	MSG_TYPE_DATA
+)
+
 type Conn struct {
 	conn       net.Conn
 	connID     int
@@ -13,6 +18,11 @@ type Conn struct {
 
 type ConnEvent struct {
 	Type int
-	Conn net.Conn
-	Data interface{}
+	Conn Conn
+	Data []byte
+}
+
+type Msg struct {
+	msgType int
+	data    map[string]interface{}
 }

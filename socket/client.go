@@ -1,10 +1,18 @@
 package socket
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
-	"fmt"
+)
+
+/*连接状态*/
+const (
+	CONN_STATUS_NONE = iota
+	CONN_STATUS_CONNECTED
+	CONN_STATUS_DISCONNECTED
 )
 
 //conn                net.Conn
@@ -25,6 +33,7 @@ import (
 //remoteAddr          string
 
 type client struct {
+	userID       int
 	connID       int64
 	Conn         net.Conn
 	eventQueue   chan ConnEvent
@@ -33,8 +42,9 @@ type client struct {
 	OnDisconnect func(event ConnEvent)
 }
 
-func NewClient() *client {
+func NewClient(userID int) *client {
 	return &client{
+		userID:     userID,
 		eventQueue: make(chan ConnEvent),
 	}
 }
@@ -51,6 +61,15 @@ func (c *client) Connect(host string, port int) error {
 		Type: EVT_ON_CONNECT,
 	}
 	c.eventQueue <- event
+	// 链接成功后，告知服务器自己的userID
+	msg := Msg{
+		msgType: MSG_TYPE_ACK,
+		data: map[string]interface{}{
+			"userID": c.userID,
+		},
+	}
+	msgJson, _ := json.Marshal(msg)
+	c.Conn.Write([]byte(msgJson))
 	return nil
 }
 

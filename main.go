@@ -8,6 +8,11 @@ import (
 	"os"
 )
 
+type Msg struct {
+	msgType int
+	data    map[string]interface{}
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Commands = []cli.Command{
@@ -23,7 +28,7 @@ func main() {
 		{
 			Name: "client",
 			Action: func(context *cli.Context) {
-				client := socket.NewClient()
+				client := socket.NewClient(1)
 				client.OnConnect = onClientConnect
 				client.OnData = onClientData
 				client.OnDisconnect = onClientDisconnect
