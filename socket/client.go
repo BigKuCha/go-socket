@@ -25,6 +25,7 @@ import (
 //remoteAddr          string
 
 type client struct {
+	connID       int64
 	Conn         net.Conn
 	eventQueue   chan ConnEvent
 	OnConnect    func(event ConnEvent)

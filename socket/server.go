@@ -23,6 +23,10 @@ const (
 )
 
 type server struct {
+	userConns map[int]int  // 用户ID和连接ID对应
+	clients   map[int]Conn // 存放所有连接的客户端
+	connID    int          // 为连接的客户端生成连接ID,自增
+
 	addr         string
 	port         int
 	listener     net.Listener
