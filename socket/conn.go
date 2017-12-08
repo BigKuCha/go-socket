@@ -3,7 +3,7 @@ package socket
 import "net"
 
 const (
-	MSG_TYPE_ACK = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
+	MSG_TYPE_ACK  = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
 	MSG_TYPE_DATA
 )
 
@@ -23,6 +23,6 @@ type ConnEvent struct {
 }
 
 type Msg struct {
-	msgType int
-	data    map[string]interface{}
+	MsgType int
+	Data    map[string]int
 }

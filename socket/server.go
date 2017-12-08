@@ -7,10 +7,11 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"encoding/binary"
 )
 
 const (
-	EVT_ON_CONNECT = iota
+	EVT_ON_CONNECT    = iota
 	EVT_ON_DISCONNECT
 	EVT_ON_DATA
 	EVT_ON_CLOSE
@@ -96,14 +97,10 @@ func (s *server) handleEvent() {
 						fmt.Printf("%+v", err)
 						return
 					}
-					if msg.msgType == MSG_TYPE_ACK {
+					if msg.MsgType == MSG_TYPE_ACK {
 						connID := evt.Conn.connID
-						fmt.Printf("链接ID是:%d\n", connID)
-						if uid, ok := msg.data["userID"]; ok {
-							userID, ok := uid.(int)
-							if ok {
-								s.userConns[connID] = userID
-							}
+						if uid, ok := msg.Data["userID"]; ok {
+							s.userConns[connID] = uid
 						}
 						continue
 					}
@@ -143,8 +140,10 @@ func handleConn(s *server, conn Conn) {
 }
 
 func handleMsg(b []byte) (Msg, error) {
+	msgHeader := b[:4]
+	msgLength := binary.BigEndian.Uint32(msgHeader)
 	var msg Msg
-	err := json.Unmarshal(b, &msg)
+	err := json.Unmarshal(b[4: msgLength+4], &msg)
 	if err != nil {
 		return msg, err
 	}

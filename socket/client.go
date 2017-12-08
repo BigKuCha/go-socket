@@ -6,11 +6,12 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"encoding/binary"
 )
 
 /*连接状态*/
 const (
-	CONN_STATUS_NONE = iota
+	CONN_STATUS_NONE         = iota
 	CONN_STATUS_CONNECTED
 	CONN_STATUS_DISCONNECTED
 )
@@ -63,13 +64,18 @@ func (c *client) Connect(host string, port int) error {
 	c.eventQueue <- event
 	// 链接成功后，告知服务器自己的userID
 	msg := Msg{
-		msgType: MSG_TYPE_ACK,
-		data: map[string]interface{}{
+		MsgType: MSG_TYPE_ACK,
+		Data: map[string]int{
 			"userID": c.userID,
 		},
 	}
 	msgJson, _ := json.Marshal(msg)
-	c.Conn.Write([]byte(msgJson))
+	msgByte := []byte(msgJson)
+	var msgHead [4]byte
+	binary.BigEndian.PutUint32(msgHead[0:], uint32(len(msgByte)))
+	msgBody := append(msgHead[0:], []byte(msgJson)...)
+	fmt.Printf("msgHead %+v \n", msgBody)
+	c.Conn.Write(msgBody)
 	return nil
 }
 
