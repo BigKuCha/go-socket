@@ -6,12 +6,12 @@ import (
 
 const (
 	MSG_TYPE_ACK  = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
-	MSG_TYPE_DATA
+	MSG_TYPE_CHAT
 )
 
 type Conn struct {
 	conn       net.Conn
-	connID     int
+	connID     uint32
 	status     int32
 	userData   interface{}
 	localAddr  string
@@ -29,12 +29,9 @@ type Msg struct {
 	Data    map[string]string
 }
 
-//func (c *Conn) SendMsg(msg Msg) (n int, err error) {
-//	msgJson, _ := json.Marshal(msg)
-//	msgByte := []byte(msgJson)
-//	var msgHead [4]byte
-//	binary.BigEndian.PutUint32(msgHead[0:], uint32(len(msgByte)))
-//	msgBody := append(msgHead[0:], []byte(msgJson)...)
-//	n, err = c.conn.Write(msgBody)
-//	return
-//}
+type ChatMsg struct {
+	MsgType int
+	FromID  int
+	ToID    int
+	Data    []byte
+}

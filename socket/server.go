@@ -1,13 +1,11 @@
 package socket
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"strconv"
-	"encoding/binary"
 )
 
 const (
@@ -18,24 +16,25 @@ const (
 )
 
 type server struct {
-	userConns map[int]int  // 用户ID和连接ID对应
-	clients   map[int]Conn // 存放所有连接的客户端
-	connID    int          // 为连接的客户端生成连接ID,自增
+	NetWork
+	userConns map[uint32]uint32 // 用户ID和连接ID对应
+	clients   map[uint32]Conn   // 存放所有连接的客户端
+	connID    uint32            // 为连接的客户端生成连接ID,自增
 
 	addr         string
 	port         int
 	listener     net.Listener
 	eventQueue   chan ConnEvent
 	OnConnect    func(event ConnEvent)
-	OnData       func(msg Msg)
+	OnData       func(msg ChatMsg)
 	OnDisconnect func(event ConnEvent)
 }
 
 func NewServer(addr string, port int) *server {
 	return &server{
 		connID:     0,
-		userConns:  make(map[int]int),
-		clients:    make(map[int]Conn),
+		userConns:  make(map[uint32]uint32),
+		clients:    make(map[uint32]Conn),
 		addr:       addr,
 		port:       port,
 		eventQueue: make(chan ConnEvent, 10),
@@ -59,11 +58,20 @@ func (s *server) Run() error {
 		connID := s.connID + 1
 		s.connID = connID
 		conn := Conn{
-			conn:   netConn,
-			connID: connID,
-			status: CONN_STATUS_CONNECTED,
+			conn:       netConn,
+			connID:     connID,
+			status:     CONN_STATUS_CONNECTED,
+			localAddr:  netConn.LocalAddr().String(),
+			remoteAddr: netConn.RemoteAddr().String(),
 		}
 		s.clients[connID] = conn
+
+		// 通知客户端其连接ID
+		msg := ChatMsg{
+			MsgType: MSG_TYPE_ACK,
+			Data:    []byte(strconv.Itoa(int(connID))),
+		}
+		netConn.Write(serialMsg(msg))
 
 		connEvent := ConnEvent{
 			Type: EVT_ON_CONNECT,
@@ -98,13 +106,14 @@ func (s *server) handleEvent() {
 						return
 					}
 					if msg.MsgType == MSG_TYPE_ACK {
+						//userID := binary.BigEndian.Uint32(msg.Data)
+						userID, _ := strconv.Atoi(string(msg.Data))
 						connID := evt.Conn.connID
-						if uid, ok := msg.Data["userID"]; ok {
-							userID, _ := strconv.Atoi(uid)
-							s.userConns[connID] = userID
-							fmt.Println("连接用户ID:", userID)
-						}
+						s.userConns[connID] = uint32(userID)
 						continue
+					} else if msg.MsgType == MSG_TYPE_CHAT {
+						toConn := s.clients[uint32(msg.ToID)]
+						toConn.conn.Write(evt.Data)
 					}
 					s.OnData(msg)
 				}
@@ -139,15 +148,4 @@ func handleConn(s *server, conn Conn) {
 		}
 		s.eventQueue <- eventQueue
 	}
-}
-
-func handleMsg(b []byte) (Msg, error) {
-	msgHeader := b[:4]
-	msgLength := binary.BigEndian.Uint32(msgHeader)
-	var msg Msg
-	err := json.Unmarshal(b[4: msgLength+4], &msg)
-	if err != nil {
-		return msg, err
-	}
-	return msg, err
 }

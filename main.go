@@ -23,7 +23,7 @@ func main() {
 		{
 			Name: "client",
 			Action: func(context *cli.Context) {
-				client := socket.NewClient(10244)
+				client := socket.NewClient(1)
 				client.OnConnect = onClientConnect
 				client.OnData = onClientData
 				client.OnDisconnect = onClientDisconnect
@@ -36,11 +36,10 @@ func main() {
 				for {
 					fmt.Print("enter msg>")
 					b, _, _ := r.ReadLine()
-					msg := socket.Msg{
-						MsgType: socket.MSG_TYPE_DATA,
-						Data: map[string]string{
-							"data": string(b),
-						},
+					msg := socket.ChatMsg{
+						ToID:    2,
+						MsgType: socket.MSG_TYPE_CHAT,
+						Data:    b,
 					}
 					client.SendMsg(msg)
 				}
@@ -54,10 +53,11 @@ func onServerConnect(event socket.ConnEvent) {
 	fmt.Println("我收到了一个连接")
 }
 
-func onServerData(msg socket.Msg) {
-	if data, ok := msg.Data["data"]; ok {
-		fmt.Println("客户端消息:", string(data))
-	}
+func onServerData(msg socket.ChatMsg) {
+	fmt.Println("客户端消息:", string(msg.Data))
+	//if data, ok := msg.Data["data"]; ok {
+	//	fmt.Println("客户端消息:", string(data))
+	//}
 }
 
 func onClientConnect(event socket.ConnEvent) {
@@ -69,6 +69,6 @@ func onClientDisconnect(event socket.ConnEvent) {
 	os.Exit(0)
 }
 
-func onClientData(event socket.ConnEvent) {
-	fmt.Println("客户端收到一条消息")
+func onClientData(msg socket.ChatMsg) {
+	fmt.Println("别人对我说:", string(msg.Data))
 }

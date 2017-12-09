@@ -14,30 +14,12 @@ const (
 	CONN_STATUS_DISCONNECTED
 )
 
-//conn                net.Conn
-//status              int32
-//connId              int
-//sendMsgQueue        chan *sendTask
-//sendTimeoutSec      int
-//eventQueue          IEventQueue
-//streamProtocol      IStreamProtocol
-//maxReadBufferLength int
-//userdata            interface{}
-//from                int
-//readTimeoutSec      int
-//fnSyncExecute       FuncSyncExecute
-//unpacker            IUnpacker
-//disableSend         int32
-//localAddr           string
-//remoteAddr          string
-
 type client struct {
 	NetWork
-	userID int
-	//Conn         Conn
+	userID       int
 	eventQueue   chan ConnEvent
 	OnConnect    func(event ConnEvent)
-	OnData       func(event ConnEvent)
+	OnData       func(msg ChatMsg)
 	OnDisconnect func(event ConnEvent)
 }
 
@@ -64,19 +46,11 @@ func (c *client) Connect(host string, port int) error {
 	}
 	c.eventQueue <- event
 	// 链接成功后，告知服务器自己的userID
-	msg := Msg{
+	msg := ChatMsg{
 		MsgType: MSG_TYPE_ACK,
-		Data: map[string]string{
-			"userID": strconv.Itoa(c.userID),
-		},
+		Data:    []byte(strconv.Itoa(c.userID)),
 	}
 	c.SendMsg(msg)
-	//msgJson, _ := json.Marshal(msg)
-	//msgByte := []byte(msgJson)
-	//var msgHead [4]byte
-	//binary.BigEndian.PutUint32(msgHead[0:], uint32(len(msgByte)))
-	//msgBody := append(msgHead[0:], []byte(msgJson)...)
-	//c.Conn.Write(msgBody)
 	return nil
 }
 
@@ -94,7 +68,17 @@ func (c *client) handleEvent() {
 				}
 			case EVT_ON_DATA:
 				if c.OnData != nil {
-					c.OnData(evt)
+					msg, err := handleMsg(evt.Data)
+					if err != nil {
+						fmt.Println("消息解析错误")
+						continue
+					}
+					if msg.MsgType == MSG_TYPE_ACK {
+						connID, _ := strconv.Atoi(string(msg.Data))
+						c.conn.connID = uint32(connID)
+						continue
+					}
+					c.OnData(msg)
 				}
 			case EVT_ON_DISCONNECT:
 				if c.OnDisconnect != nil {
