@@ -1,12 +1,10 @@
 package socket
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"strconv"
-	"encoding/binary"
 )
 
 /*连接状态*/
@@ -34,9 +32,9 @@ const (
 //remoteAddr          string
 
 type client struct {
-	userID       int
-	connID       int64
-	Conn         net.Conn
+	NetWork
+	userID int
+	//Conn         Conn
 	eventQueue   chan ConnEvent
 	OnConnect    func(event ConnEvent)
 	OnData       func(event ConnEvent)
@@ -51,11 +49,14 @@ func NewClient(userID int) *client {
 }
 
 func (c *client) Connect(host string, port int) error {
-	conn, err := net.Dial("tcp", net.JoinHostPort(host, strconv.Itoa(port)))
+	netconn, err := net.Dial("tcp", net.JoinHostPort(host, strconv.Itoa(port)))
 	if err != nil {
 		return err
 	}
-	c.Conn = conn
+	conn := Conn{
+		conn: netconn,
+	}
+	c.conn = conn
 	go c.handleEvent()
 	go c.handleClientConn()
 	event := ConnEvent{
@@ -65,17 +66,17 @@ func (c *client) Connect(host string, port int) error {
 	// 链接成功后，告知服务器自己的userID
 	msg := Msg{
 		MsgType: MSG_TYPE_ACK,
-		Data: map[string]int{
-			"userID": c.userID,
+		Data: map[string]string{
+			"userID": strconv.Itoa(c.userID),
 		},
 	}
-	msgJson, _ := json.Marshal(msg)
-	msgByte := []byte(msgJson)
-	var msgHead [4]byte
-	binary.BigEndian.PutUint32(msgHead[0:], uint32(len(msgByte)))
-	msgBody := append(msgHead[0:], []byte(msgJson)...)
-	fmt.Printf("msgHead %+v \n", msgBody)
-	c.Conn.Write(msgBody)
+	c.SendMsg(msg)
+	//msgJson, _ := json.Marshal(msg)
+	//msgByte := []byte(msgJson)
+	//var msgHead [4]byte
+	//binary.BigEndian.PutUint32(msgHead[0:], uint32(len(msgByte)))
+	//msgBody := append(msgHead[0:], []byte(msgJson)...)
+	//c.Conn.Write(msgBody)
 	return nil
 }
 
@@ -107,7 +108,7 @@ func (c *client) handleEvent() {
 func (c *client) handleClientConn() {
 	buf := make([]byte, 65535)
 	for {
-		_, err := c.Conn.Read(buf)
+		_, err := c.conn.conn.Read(buf)
 		if err != nil {
 			if err != io.EOF {
 				fmt.Printf("%+v", err)

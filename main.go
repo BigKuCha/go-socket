@@ -36,7 +36,13 @@ func main() {
 				for {
 					fmt.Print("enter msg>")
 					b, _, _ := r.ReadLine()
-					client.Conn.Write(b)
+					msg := socket.Msg{
+						MsgType: socket.MSG_TYPE_DATA,
+						Data: map[string]string{
+							"data": string(b),
+						},
+					}
+					client.SendMsg(msg)
 				}
 			},
 		},
@@ -48,9 +54,10 @@ func onServerConnect(event socket.ConnEvent) {
 	fmt.Println("我收到了一个连接")
 }
 
-func onServerData(event socket.ConnEvent) {
-	fmt.Println("我收到了一个消息")
-	//fmt.Printf("%+v", event.Data)
+func onServerData(msg socket.Msg) {
+	if data, ok := msg.Data["data"]; ok {
+		fmt.Println("客户端消息:", string(data))
+	}
 }
 
 func onClientConnect(event socket.ConnEvent) {

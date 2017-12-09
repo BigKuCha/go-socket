@@ -27,7 +27,7 @@ type server struct {
 	listener     net.Listener
 	eventQueue   chan ConnEvent
 	OnConnect    func(event ConnEvent)
-	OnData       func(event ConnEvent)
+	OnData       func(msg Msg)
 	OnDisconnect func(event ConnEvent)
 }
 
@@ -100,11 +100,13 @@ func (s *server) handleEvent() {
 					if msg.MsgType == MSG_TYPE_ACK {
 						connID := evt.Conn.connID
 						if uid, ok := msg.Data["userID"]; ok {
-							s.userConns[connID] = uid
+							userID, _ := strconv.Atoi(uid)
+							s.userConns[connID] = userID
+							fmt.Println("连接用户ID:", userID)
 						}
 						continue
 					}
-					s.OnData(evt)
+					s.OnData(msg)
 				}
 			case EVT_ON_DISCONNECT:
 				if s.OnDisconnect != nil {
