@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/bigkucha/go-socket"
 	"github.com/urfave/cli"
-	"go-socket/socket"
 	"os"
 )
 
@@ -14,7 +14,7 @@ func main() {
 		{
 			Name: "server",
 			Action: func(context *cli.Context) {
-				server := socket.NewServer("localhost", 8888)
+				server := gosocket.NewServer("localhost", 8888)
 				server.OnConnect = onServerConnect
 				server.OnData = onServerData
 				server.Run()
@@ -23,7 +23,7 @@ func main() {
 		{
 			Name: "client",
 			Action: func(context *cli.Context) {
-				client := socket.NewClient(1)
+				client := gosocket.NewClient(1)
 				client.OnConnect = onClientConnect
 				client.OnData = onClientData
 				client.OnDisconnect = onClientDisconnect
@@ -36,9 +36,9 @@ func main() {
 				for {
 					fmt.Print("enter msg>")
 					b, _, _ := r.ReadLine()
-					msg := socket.ChatMsg{
+					msg := gosocket.ChatMsg{
 						ToID:    2,
-						MsgType: socket.MSG_TYPE_CHAT,
+						MsgType: gosocket.MSG_TYPE_CHAT,
 						Data:    b,
 					}
 					client.SendMsg(msg)
@@ -49,26 +49,26 @@ func main() {
 	app.Run(os.Args)
 }
 
-func onServerConnect(event socket.ConnEvent) {
+func onServerConnect(event gosocket.ConnEvent) {
 	fmt.Println("我收到了一个连接")
 }
 
-func onServerData(msg socket.ChatMsg) {
+func onServerData(msg gosocket.ChatMsg) {
 	fmt.Println("客户端消息:", string(msg.Data))
 	//if data, ok := msg.Data["data"]; ok {
 	//	fmt.Println("客户端消息:", string(data))
 	//}
 }
 
-func onClientConnect(event socket.ConnEvent) {
+func onClientConnect(event gosocket.ConnEvent) {
 	fmt.Println("客户端连接成功了！")
 }
 
-func onClientDisconnect(event socket.ConnEvent) {
+func onClientDisconnect(event gosocket.ConnEvent) {
 	fmt.Println("客户端已经断开链接")
 	os.Exit(0)
 }
 
-func onClientData(msg socket.ChatMsg) {
+func onClientData(msg gosocket.ChatMsg) {
 	fmt.Println("别人对我说:", string(msg.Data))
 }

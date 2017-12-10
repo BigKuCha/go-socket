@@ -1,11 +1,9 @@
-package socket
+package gosocket
 
-import (
-	"net"
-)
+import "net"
 
 const (
-	MSG_TYPE_ACK  = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
+	MSG_TYPE_ACK = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
 	MSG_TYPE_CHAT
 )
 

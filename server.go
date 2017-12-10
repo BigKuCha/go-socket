@@ -1,4 +1,4 @@
-package socket
+package gosocket
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	EVT_ON_CONNECT    = iota
+	EVT_ON_CONNECT = iota
 	EVT_ON_DISCONNECT
 	EVT_ON_DATA
 	EVT_ON_CLOSE

@@ -1,8 +1,8 @@
-package socket
+package gosocket
 
 import (
-	"encoding/json"
 	"encoding/binary"
+	"encoding/json"
 )
 
 type NetWork struct {
@@ -28,7 +28,7 @@ func handleMsg(b []byte) (ChatMsg, error) {
 	msgHeader := b[:4]
 	msgLength := binary.BigEndian.Uint32(msgHeader)
 	var msg ChatMsg
-	err := json.Unmarshal(b[4: msgLength+4], &msg)
+	err := json.Unmarshal(b[4:msgLength+4], &msg)
 	if err != nil {
 		return msg, err
 	}
