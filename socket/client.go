@@ -9,9 +9,10 @@ import (
 
 /*连接状态*/
 const (
-	CONN_STATUS_NONE         = iota
-	CONN_STATUS_CONNECTED
-	CONN_STATUS_DISCONNECTED
+	CONN_STATUS_NONE         = iota // 初始状态
+	CONN_STATUS_CONNECTED           // 已连接,但未获得connID
+	CONN_STATUS_READY               // 已获得connID,可以发送聊天消息
+	CONN_STATUS_DISCONNECTED        // 失去连接
 )
 
 type client struct {
