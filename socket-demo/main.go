@@ -6,6 +6,7 @@ import (
 	"github.com/bigkucha/go-socket"
 	"github.com/urfave/cli"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -23,11 +24,28 @@ func main() {
 		{
 			Name: "client",
 			Action: func(context *cli.Context) {
-				client := gosocket.NewClient(1)
+				if context.NArg() < 2 {
+					fmt.Println("参数不够！ 第一个参数为用户ID，第二个参数为想要聊天的用户ID")
+					return
+				}
+
+				userID, err := strconv.Atoi(context.Args()[0])
+				if err != nil {
+					fmt.Println("第一个参数字为整形数字")
+					return
+				}
+				toID, err := strconv.Atoi(context.Args()[1])
+
+				if err != nil {
+					fmt.Println("第二个参数为整形数字！")
+					return
+				}
+
+				client := gosocket.NewClient(userID)
 				client.OnConnect = onClientConnect
 				client.OnData = onClientData
 				client.OnDisconnect = onClientDisconnect
-				err := client.Connect("localhost", 8888)
+				err = client.Connect("localhost", 8888)
 				if err != nil {
 					fmt.Println("客户端连接失败", err)
 					os.Exit(0)
@@ -37,7 +55,7 @@ func main() {
 					fmt.Print("enter msg>")
 					b, _, _ := r.ReadLine()
 					msg := gosocket.ChatMsg{
-						ToID:    2,
+						ToID:    toID,
 						MsgType: gosocket.MSG_TYPE_CHAT,
 						Data:    b,
 					}

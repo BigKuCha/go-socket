@@ -55,12 +55,11 @@ func (s *server) Run() error {
 			panic("链接失败")
 		}
 
-		connID := s.connID + 1
+		connID := s.connID + 2
 		s.connID = connID
 		conn := Conn{
 			conn:       netConn,
 			connID:     connID,
-			status:     CONN_STATUS_CONNECTED,
 			localAddr:  netConn.LocalAddr().String(),
 			remoteAddr: netConn.RemoteAddr().String(),
 		}
@@ -98,18 +97,21 @@ func (s *server) handleEvent() {
 					s.OnConnect(evt)
 				}
 			case EVT_ON_DATA:
+				fmt.Println("这是是个消息吗立法将范围而")
 				if s.OnData != nil {
 					msg, err := handleMsg(evt.Data)
+					fmt.Printf("%+v", msg)
 					if err != nil {
 						fmt.Println("消息类型错误")
 						fmt.Printf("%+v", err)
 						return
 					}
+					fmt.Println("====", msg.MsgType)
 					if msg.MsgType == MSG_TYPE_ACK {
-						//userID := binary.BigEndian.Uint32(msg.Data)
 						userID, _ := strconv.Atoi(string(msg.Data))
 						connID := evt.Conn.connID
-						s.userConns[connID] = uint32(userID)
+						fmt.Printf("用户ID: %d 链接ID: %d \n", userID, connID)
+						s.userConns[uint32(userID)] = connID
 						continue
 					} else if msg.MsgType == MSG_TYPE_CHAT {
 						toConn := s.clients[uint32(msg.ToID)]

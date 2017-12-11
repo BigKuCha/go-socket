@@ -10,7 +10,6 @@ const (
 type Conn struct {
 	conn       net.Conn
 	connID     uint32
-	status     int32
 	userData   interface{}
 	localAddr  string
 	remoteAddr string

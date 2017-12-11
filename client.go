@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"errors"
 )
 
 /*连接状态*/
@@ -18,6 +19,7 @@ const (
 type client struct {
 	NetWork
 	userID       int
+	connStatus   int
 	eventQueue   chan ConnEvent
 	OnConnect    func(event ConnEvent)
 	OnData       func(msg ChatMsg)
@@ -26,6 +28,7 @@ type client struct {
 
 func NewClient(userID int) *client {
 	return &client{
+		connStatus: CONN_STATUS_NONE,
 		userID:     userID,
 		eventQueue: make(chan ConnEvent),
 	}
@@ -36,6 +39,7 @@ func (c *client) Connect(host string, port int) error {
 	if err != nil {
 		return err
 	}
+	c.connStatus = CONN_STATUS_CONNECTED
 	conn := Conn{
 		conn: netconn,
 	}
@@ -77,12 +81,15 @@ func (c *client) handleEvent() {
 					if msg.MsgType == MSG_TYPE_ACK {
 						connID, _ := strconv.Atoi(string(msg.Data))
 						c.conn.connID = uint32(connID)
+						fmt.Println("我的链接ID是", connID)
+						c.connStatus = CONN_STATUS_READY
 						continue
 					}
 					c.OnData(msg)
 				}
 			case EVT_ON_DISCONNECT:
 				if c.OnDisconnect != nil {
+					c.connStatus = CONN_STATUS_DISCONNECTED
 					c.OnDisconnect(evt)
 				}
 			}
@@ -110,4 +117,18 @@ func (c *client) handleClientConn() {
 		}
 		c.eventQueue <- eventQueue
 	}
+}
+
+// 发送消息
+func (c *client) SendMsg(msg ChatMsg) (n int, err error) {
+	msg.FromID = c.userID
+	if c.connStatus != CONN_STATUS_READY {
+		return 0, errors.New("未连接就绪")
+	}
+	if c.userID > 0 && msg.ToID > 0 && c.userID != msg.ToID {
+		msgBody := serialMsg(msg)
+		n, err = c.conn.conn.Write(msgBody)
+		return
+	}
+	return 0, errors.New("消息格式错误")
 }
