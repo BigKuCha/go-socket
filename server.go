@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
+	"errors"
 )
 
 const (
@@ -108,14 +108,15 @@ func (s *server) handleEvent() {
 						s.userConns[uint32(userID)] = connID
 						continue
 					} else if msg.MsgType == MSG_TYPE_CHAT {
-						if connID, ok := s.userConns[uint32(msg.ToID)]; ok {
-							if toConn, ok := s.clients[connID]; ok {
-								toConn.SendMsg(msg)
-							} else {
-								fmt.Println("对方未连接")
+						toConn, err := s.getConnByUserID(uint32(msg.ToID))
+						if err != nil {
+							errMsg := ChatMsg{
+								MsgType: MSG_TYPE_CHAT,
+								Data:    []byte(err.Error()),
 							}
+							evt.Conn.SendMsg(errMsg)
 						} else {
-							fmt.Println("对方未连接")
+							toConn.SendMsg(msg)
 						}
 					}
 					s.OnData(msg)
@@ -129,14 +130,24 @@ func (s *server) handleEvent() {
 	}
 }
 
+func (s *server) getConnByUserID(userID uint32) (conn *Conn, err error) {
+	if connID, ok := s.userConns[userID]; ok {
+		if conn, ok := s.clients[connID]; ok {
+			return conn, nil
+		}
+	}
+	return conn, errors.New("对方未连接")
+}
+
 func handleConn(s *server, conn Conn) {
 	buf := make([]byte, 65535)
 	for {
 		_, err := conn.conn.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				fmt.Printf("%+v", err)
-				os.Exit(0)
+				fmt.Printf("%+v \n", err)
+				conn.conn.Close()
+				//return
 			}
 			eventQueue := ConnEvent{
 				Conn: conn,

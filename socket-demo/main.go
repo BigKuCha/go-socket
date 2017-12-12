@@ -55,12 +55,14 @@ func main() {
 				for {
 					fmt.Print("enter msg>")
 					b, _, _ := r.ReadLine()
-					msg := gosocket.ChatMsg{
-						ToID:    toID,
-						MsgType: gosocket.MSG_TYPE_CHAT,
-						Data:    b,
+					if len(b) > 0 {
+						msg := gosocket.ChatMsg{
+							ToID:    toID,
+							MsgType: gosocket.MSG_TYPE_CHAT,
+							Data:    b,
+						}
+						client.SendMsg(msg)
 					}
-					client.SendMsg(msg)
 				}
 			},
 		},
@@ -69,7 +71,7 @@ func main() {
 }
 
 func onServerConnect(event gosocket.ConnEvent) {
-	fmt.Println("我收到了一个连接")
+	fmt.Println("我收到了一个连接", event.Conn.GetRemoteAddr())
 }
 
 func onServerData(msg gosocket.ChatMsg) {
