@@ -69,7 +69,8 @@ func (s *server) Run() error {
 			MsgType: MSG_TYPE_ACK,
 			Data:    []byte(strconv.Itoa(int(connID))),
 		}
-		netConn.Write(serialMsg(msg))
+		conn.SendMsg(msg)
+		//netConn.Write(serialMsg(msg))
 		connEvent := ConnEvent{
 			Type: EVT_ON_CONNECT,
 			Conn: conn,
@@ -110,12 +111,13 @@ func (s *server) handleEvent() {
 					} else if msg.MsgType == MSG_TYPE_CHAT {
 						if connID, ok := s.userConns[uint32(msg.ToID)]; ok {
 							if toConn, ok := s.clients[connID]; ok {
-								toConn.conn.Write(evt.Data)
-								continue
+								toConn.SendMsg(msg)
+							} else {
+								fmt.Println("对方未连接")
 							}
+						} else {
+							fmt.Println("对方未连接")
 						}
-						fmt.Println("对方未连接")
-						continue
 					}
 					s.OnData(msg)
 				}

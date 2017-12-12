@@ -3,7 +3,7 @@ package gosocket
 import "net"
 
 const (
-	MSG_TYPE_ACK = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
+	MSG_TYPE_ACK  = iota // 响应消息类型， 用于服务器和客户端交互userid和connid
 	MSG_TYPE_CHAT
 )
 
@@ -31,4 +31,10 @@ type ChatMsg struct {
 	FromID  int
 	ToID    int
 	Data    []byte
+}
+
+func (c *Conn) SendMsg(msg ChatMsg) (n int, err error) {
+	msgBody := serialMsg(msg)
+	n, err = c.conn.Write(msgBody)
+	return
 }

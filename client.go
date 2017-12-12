@@ -55,7 +55,7 @@ func (c *client) Connect(host string, port int) error {
 		MsgType: MSG_TYPE_ACK,
 		Data:    []byte(strconv.Itoa(c.userID)),
 	}
-	c.SendMsg(msg)
+	c.conn.SendMsg(msg)
 	return nil
 }
 
@@ -75,7 +75,7 @@ func (c *client) handleEvent() {
 				if c.OnData != nil {
 					msg, err := handleMsg(evt.Data)
 					if err != nil {
-						fmt.Println("消息解析错误")
+						fmt.Printf("消息解析错误 %+v \n", err)
 						continue
 					}
 					if msg.MsgType == MSG_TYPE_ACK {

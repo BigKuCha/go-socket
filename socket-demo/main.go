@@ -72,7 +72,7 @@ func onServerConnect(event gosocket.ConnEvent) {
 }
 
 func onServerData(msg gosocket.ChatMsg) {
-	fmt.Println("客户端消息:", string(msg.Data))
+	fmt.Printf("客户端消息: %d 对 %d 说:%s \n", msg.FromID, msg.ToID, string(msg.Data))
 	//if data, ok := msg.Data["data"]; ok {
 	//	fmt.Println("客户端消息:", string(data))
 	//}
@@ -88,5 +88,5 @@ func onClientDisconnect(event gosocket.ConnEvent) {
 }
 
 func onClientData(msg gosocket.ChatMsg) {
-	fmt.Println("别人对我说:", string(msg.Data))
+	fmt.Printf("%d 对我说 :%s \n", msg.FromID, string(msg.Data))
 }

@@ -3,6 +3,7 @@ package gosocket
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 )
 
 type NetWork struct {
@@ -18,18 +19,13 @@ func serialMsg(msg ChatMsg) []byte {
 	return msgBody
 }
 
-func (net *NetWork) SendMsg(msg ChatMsg) (n int, err error) {
-	msgBody := serialMsg(msg)
-	n, err = net.conn.conn.Write(msgBody)
-	return
-}
-
 func handleMsg(b []byte) (ChatMsg, error) {
 	msgHeader := b[:4]
 	msgLength := binary.BigEndian.Uint32(msgHeader)
 	var msg ChatMsg
 	err := json.Unmarshal(b[4:msgLength+4], &msg)
 	if err != nil {
+		fmt.Printf("解码错误: %+v \n", err)
 		return msg, err
 	}
 	return msg, err
