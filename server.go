@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	EVT_ON_CONNECT = iota
+	EVT_ON_CONNECT    = iota
 	EVT_ON_DISCONNECT
 	EVT_ON_DATA
 	EVT_ON_CLOSE
@@ -18,7 +18,7 @@ const (
 type server struct {
 	NetWork
 	userConns map[uint32]uint32 // 用户ID和连接ID对应
-	clients   map[uint32]Conn   // 存放所有连接的客户端
+	clients   map[uint32]*Conn  // 存放所有连接的客户端
 	connID    uint32            // 为连接的客户端生成连接ID,自增
 
 	addr         string
@@ -34,7 +34,7 @@ func NewServer(addr string, port int) *server {
 	return &server{
 		connID:     0,
 		userConns:  make(map[uint32]uint32),
-		clients:    make(map[uint32]Conn),
+		clients:    make(map[uint32]*Conn),
 		addr:       addr,
 		port:       port,
 		eventQueue: make(chan ConnEvent, 10),
@@ -55,7 +55,7 @@ func (s *server) Run() error {
 			panic("链接失败")
 		}
 
-		connID := s.connID + 2
+		connID := s.connID + 1
 		s.connID = connID
 		conn := Conn{
 			conn:       netConn,
@@ -63,15 +63,13 @@ func (s *server) Run() error {
 			localAddr:  netConn.LocalAddr().String(),
 			remoteAddr: netConn.RemoteAddr().String(),
 		}
-		s.clients[connID] = conn
-
+		s.clients[connID] = &conn
 		// 通知客户端其连接ID
 		msg := ChatMsg{
 			MsgType: MSG_TYPE_ACK,
 			Data:    []byte(strconv.Itoa(int(connID))),
 		}
 		netConn.Write(serialMsg(msg))
-
 		connEvent := ConnEvent{
 			Type: EVT_ON_CONNECT,
 			Conn: conn,
@@ -97,25 +95,27 @@ func (s *server) handleEvent() {
 					s.OnConnect(evt)
 				}
 			case EVT_ON_DATA:
-				fmt.Println("这是是个消息吗立法将范围而")
 				if s.OnData != nil {
 					msg, err := handleMsg(evt.Data)
-					fmt.Printf("%+v", msg)
 					if err != nil {
 						fmt.Println("消息类型错误")
 						fmt.Printf("%+v", err)
 						return
 					}
-					fmt.Println("====", msg.MsgType)
 					if msg.MsgType == MSG_TYPE_ACK {
 						userID, _ := strconv.Atoi(string(msg.Data))
 						connID := evt.Conn.connID
-						fmt.Printf("用户ID: %d 链接ID: %d \n", userID, connID)
 						s.userConns[uint32(userID)] = connID
 						continue
 					} else if msg.MsgType == MSG_TYPE_CHAT {
-						toConn := s.clients[uint32(msg.ToID)]
-						toConn.conn.Write(evt.Data)
+						if connID, ok := s.userConns[uint32(msg.ToID)]; ok {
+							if toConn, ok := s.clients[connID]; ok {
+								toConn.conn.Write(evt.Data)
+								continue
+							}
+						}
+						fmt.Println("对方未连接")
+						continue
 					}
 					s.OnData(msg)
 				}
@@ -139,12 +139,14 @@ func handleConn(s *server, conn Conn) {
 			}
 			fmt.Println(conn.conn.RemoteAddr(), "断开连接")
 			eventQueue := ConnEvent{
+				Conn: conn,
 				Type: EVT_ON_DISCONNECT,
 			}
 			s.eventQueue <- eventQueue
 			break
 		}
 		eventQueue := ConnEvent{
+			Conn: conn,
 			Type: EVT_ON_DATA,
 			Data: buf,
 		}

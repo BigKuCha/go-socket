@@ -122,13 +122,10 @@ func (c *client) handleClientConn() {
 // 发送消息
 func (c *client) SendMsg(msg ChatMsg) (n int, err error) {
 	msg.FromID = c.userID
-	if c.connStatus != CONN_STATUS_READY {
+	if msg.MsgType == MSG_TYPE_CHAT && c.connStatus != CONN_STATUS_READY {
 		return 0, errors.New("未连接就绪")
 	}
-	if c.userID > 0 && msg.ToID > 0 && c.userID != msg.ToID {
-		msgBody := serialMsg(msg)
-		n, err = c.conn.conn.Write(msgBody)
-		return
-	}
-	return 0, errors.New("消息格式错误")
+	msgBody := serialMsg(msg)
+	n, err = c.conn.conn.Write(msgBody)
+	return
 }
