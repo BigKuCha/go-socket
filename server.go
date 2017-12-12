@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	EVT_ON_CONNECT    = iota
+	EVT_ON_CONNECT = iota
 	EVT_ON_DISCONNECT
 	EVT_ON_DATA
 	EVT_ON_CLOSE
 )
 
 type server struct {
-	NetWork
+	conn      Conn
 	userConns map[uint32]uint32 // 用户ID和连接ID对应
 	clients   map[uint32]*Conn  // 存放所有连接的客户端
 	connID    uint32            // 为连接的客户端生成连接ID,自增
@@ -70,7 +70,6 @@ func (s *server) Run() error {
 			Data:    []byte(strconv.Itoa(int(connID))),
 		}
 		conn.SendMsg(msg)
-		//netConn.Write(serialMsg(msg))
 		connEvent := ConnEvent{
 			Type: EVT_ON_CONNECT,
 			Conn: conn,
@@ -97,7 +96,7 @@ func (s *server) handleEvent() {
 				}
 			case EVT_ON_DATA:
 				if s.OnData != nil {
-					msg, err := handleMsg(evt.Data)
+					msg, err := HandleMsg(evt.Data)
 					if err != nil {
 						fmt.Println("消息类型错误")
 						fmt.Printf("%+v", err)
@@ -139,7 +138,6 @@ func handleConn(s *server, conn Conn) {
 				fmt.Printf("%+v", err)
 				os.Exit(0)
 			}
-			fmt.Println(conn.conn.RemoteAddr(), "断开连接")
 			eventQueue := ConnEvent{
 				Conn: conn,
 				Type: EVT_ON_DISCONNECT,

@@ -18,6 +18,7 @@ func main() {
 				server := gosocket.NewServer("localhost", 8888)
 				server.OnConnect = onServerConnect
 				server.OnData = onServerData
+				server.OnDisconnect = onServerDisconnect
 				server.Run()
 			},
 		},
@@ -73,9 +74,10 @@ func onServerConnect(event gosocket.ConnEvent) {
 
 func onServerData(msg gosocket.ChatMsg) {
 	fmt.Printf("客户端消息: %d 对 %d 说:%s \n", msg.FromID, msg.ToID, string(msg.Data))
-	//if data, ok := msg.Data["data"]; ok {
-	//	fmt.Println("客户端消息:", string(data))
-	//}
+}
+
+func onServerDisconnect(event gosocket.ConnEvent) {
+	fmt.Println(event.Conn.GetRemoteAddr(), "断开连接")
 }
 
 func onClientConnect(event gosocket.ConnEvent) {

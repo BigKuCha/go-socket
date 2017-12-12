@@ -1,11 +1,11 @@
 package gosocket
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"strconv"
-	"errors"
 )
 
 /*连接状态*/
@@ -17,7 +17,7 @@ const (
 )
 
 type client struct {
-	NetWork
+	conn         Conn
 	userID       int
 	connStatus   int
 	eventQueue   chan ConnEvent
@@ -73,7 +73,7 @@ func (c *client) handleEvent() {
 				}
 			case EVT_ON_DATA:
 				if c.OnData != nil {
-					msg, err := handleMsg(evt.Data)
+					msg, err := HandleMsg(evt.Data)
 					if err != nil {
 						fmt.Printf("消息解析错误 %+v \n", err)
 						continue
@@ -125,7 +125,7 @@ func (c *client) SendMsg(msg ChatMsg) (n int, err error) {
 	if msg.MsgType == MSG_TYPE_CHAT && c.connStatus != CONN_STATUS_READY {
 		return 0, errors.New("未连接就绪")
 	}
-	msgBody := serialMsg(msg)
+	msgBody := SerialMsg(msg)
 	n, err = c.conn.conn.Write(msgBody)
 	return
 }
