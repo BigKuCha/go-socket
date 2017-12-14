@@ -28,7 +28,7 @@
 
 ## Demo
 
-Run there windows, One for server, tow for clients.
+Run there terminal windows, One for server, tow for clients.
 
 the first window for client ,userID: 1 , userIDWhoYouWantToTalk: 2  
 the second window for client , userID: 2, userIDWhoYouWantToTalk: 3
